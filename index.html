@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>TFLOL Unblocker</title>
+    
+    <!-- Permanent direct reference to your working lowercase logo filename -->
+    <link rel="icon" type="image/png" href="./image_DVjCen.png">
+    <link rel="shortcut icon" type="image/png" href="./image_DVjCen.png">
+    
+    <style>
+        :root {
+            --bg-color: #050508;
+            --container-color: #120202;
+            --border-color: #380a0a;
+            --accent-color: #e50914;
+            --text-color: #ffffff;
+            --text-secondary: #a3a3a3;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-color); display: flex; flex-direction: column; min-height: 100vh; position: relative; }
+        header { background-color: var(--container-color); padding: 0.8rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); gap: 1rem; }
+        .logo-container { display: flex; align-items: center; gap: 0.8rem; }
+        .custom-logo { height: 35px; width: auto; max-width: 45px; object-fit: contain; display: block; }
+        .logo-text { font-size: 1.5rem; font-weight: bold; color: var(--accent-color); text-shadow: 0 0 10px rgba(229, 9, 20, 0.4); white-space: nowrap; }
+        .header-controls { display: flex; align-items: center; gap: 1.5rem; flex: 0 1 600px; justify-content: flex-end; }
+        .search-container { flex: 0 1 400px; }
+        .search-container input { width: 100%; padding: 0.6rem 1rem; border-radius: 20px; border: 1px solid var(--border-color); background-color: #000000; color: var(--text-color); outline: none; transition: all 0.3s; }
+        .search-container input:focus { border-color: var(--accent-color); box-shadow: 0 0 8px rgba(229, 9, 20, 0.3); }
+        
+        .credits-trigger-btn { background-color: transparent; color: var(--text-secondary); border: 1px solid var(--border-color); padding: 0.5rem 1.2rem; border-radius: 20px; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: all 0.2s; white-space: nowrap; }
+        .credits-trigger-btn:hover { color: #ffffff; border-color: var(--accent-color); box-shadow: 0 0 8px rgba(229, 9, 20, 0.3); }
+        
+        main { flex: 1; padding: 2rem; max-width: 1200px; width: 100%; margin: 0 auto; }
+        
+        /* Game Viewport Container Layout Rules */
+        .player-container { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #000000; z-index: 99999; overflow: hidden; flex-direction: column; }
+        .player-container.active { display: flex; }
+        .iframe-wrapper { flex: 1; width: 100%; height: 100%; background: #000; position: relative; }
+        .iframe-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+        
+        /* Controls Bar strip shared across layout viewports */
+        .player-bar { background-color: var(--container-color); padding: 0.8rem 1.5rem; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); }
+        .player-title { font-size: 1.05rem; font-weight: 600; color: #ffffff; }
+        .player-controls { display: flex; gap: 0.8rem; }
+        .fs-btn { background-color: #000000; color: #ffffff; border: 1px solid var(--border-color); padding: 0.5rem 1.2rem; border-radius: 20px; cursor: pointer; font-size: 0.9rem; font-weight: bold; transition: all 0.2s; }
+        .fs-btn:hover { background-color: var(--accent-color); border-color: var(--accent-color); box-shadow: 0 0 8px rgba(229, 9, 20, 0.4); }
+        
+        /* Library Selection Grid Options */
+        .games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1.5rem; }
+        .game-card { background-color: var(--container-color); border-radius: 10px; overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; border: 1px solid var(--border-color); }
+        .game-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(229, 9, 20, 0.25); border-color: var(--accent-color); }
+        .game-thumb { width: 100%; height: 130px; background-color: #000000; border-bottom: 1px solid var(--border-color); display: flex; justify-content: center; align-items: center; }
+        .heart-icon { font-size: 4.5rem; filter: drop-shadow(0 0 10px rgba(229, 9, 20, 0.3)); }
+        .game-info { padding: 0.8rem; }
+        .game-title { font-size: 1rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .game-category { font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem; }
+        
+        /* Separate Fullscreen Dedicated Credits Viewport */
+        .credits-overlay-screen { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #050508; z-index: 100000; flex-direction: column; }
+        .credits-overlay-screen.active { display: flex; }
+        .credits-view-wrapper { flex: 1; width: 100%; display: flex; justify-content: center; align-items: center; padding: 2rem; background: radial-gradient(circle at center, #120202 0%, #050508 100%); }
+        .credits-board { background-color: var(--container-color); border: 2px solid var(--border-color); border-radius: 16px; padding: 2.5rem; text-align: center; max-width: 600px; width: 95%; box-shadow: 0 0 30px rgba(229, 9, 20, 0.2); }
+        .credits-header-title { font-size: 2rem; font-weight: bold; color: var(--accent-color); margin-bottom: 1.5rem; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 15px rgba(229, 9, 20, 0.4); }
+        .credits-list { display: flex; flex-direction: column; gap: 1rem; text-align: left; max-width: 450px; margin: 0 auto; }
+        .credits-list-item { font-size: 1.15rem; color: var(--text-color); line-height: 1.4; border-bottom: 1px solid dashed var(--border-color); padding-bottom: 0.5rem; }
+        .credits-list-item:last-child { border-bottom: none; }
+        .credits-list-item strong { color: var(--accent-color); }
+        
+        footer { background-color: var(--container-color); text-align: center; padding: 1rem; font-size: 0.9rem; color: var(--text-secondary); border-top: 2px solid var(--border-color); margin-top: auto; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <img src="./image_DVjCen.png" alt="Logo" class="custom-logo">
+            <span class="logo-text">TFLOL Unblocker</span>
+        </div>
+        <div class="header-controls">
+            <div class="search-container">
+                <input type="text" id="searchBar" placeholder="Search available apps..." onkeyup="filterGames()">
+            </div>
+            <button class="credits-trigger-btn" onclick="openCredits()">📝 Credits</button>
+        </div>
+    </header>
+    <main>
+        <h2 style="margin-bottom: 1.5rem; border-left: 4px solid var(--accent-color); padding-left: 0.5rem;">Applications Library</h2>
+        <section class="games-grid" id="gamesGrid"></section>
+    </main>
+
+    <!-- Game Viewport Component Window Layer -->
+    <section class="player-container" id="playerContainer">
+        <div class="iframe-wrapper">
+            <iframe id="gameIframe" src="" allowfullscreen scrolling="no" allow="autoplay; gamepad *; fullscreen *;"></iframe>
+        </div>
+        <div class="player-bar">
+            <span class="player-title" id="activeGameTitle">Deltarune Web Port</span>
+            <div class="player-controls">
+                <button class="fs-btn" onclick="backToHome()">← Back to Home</button>
+                <button class="fs-btn" onclick="goFullscreen()">⛶ Fullscreen</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Full Viewport Separate Credits Page Component Window -->
+    <section class="credits-overlay-screen" id="creditsOverlay">
+        <div class="credits-view-wrapper">
+            <div class="credits-board">
+                <div class="credits-header-title">Project Credits</div>
+                <div class="credits-list">
+                    <div class="credits-list-item"><strong>Lead Dev:</strong> TFLOLSYX</div>
+                    <div class="credits-list-item"><strong>Mario64 distributer:</strong> reyuki/yukios</div>
+                    <div class="credits-list-item"><strong>deltarune webport creator:</strong> Mollommi</div>
+                    <div class="credits-list-item"><strong>web dasher creators:</strong> aloaf, Lasokar, and PinkDev</div>
+                </div>
+            </div>
+        </div>
+        <div class="player-bar">
+            <span class="player-title">System Information</span>
+            <div class="player-controls">
+                <button class="fs-btn" onclick="closeCredits()">← Back to Home</button>
+            </div>
+        </div>
+    </section>
+
+    <footer>&copy; 2026 TFLOL Hub. Personal deployment portal.</footer>
+    <script>
+        // LOCKED BACK IN: Re-mapped to the working WebAssembly deployment repository link node
+        const games = [{
+            title: "Deltarune Web Port",
+            category: "RPG",
+            htmlContent: '<div class="heart-icon">❤️</div>',
+            url: "https://github.io"
+        },
+        {
+            title: "Mario 64 webport",
+            category: "Platformer",
+            htmlContent: '⭐',
+            url: "./mario64.html"
+        },
+        {
+            title: "Geometry Dash",
+            category: "Platformer",
+            htmlContent: '🟨',
+            url: "./geometrydash.html"
+        },
+        {
+            title: "PEAK",
+            category: "Adventure",
+            htmlContent: '⛰️',
+            url: "./peak.html"
+        }];
+        
+        const gamesGrid = document.getElementById('gamesGrid');
+        const playerContainer = document.getElementById('playerContainer');
+        const gameIframe = document.getElementById('gameIframe');
+        const activeGameTitle = document.getElementById('activeGameTitle');
+        const creditsOverlay = document.getElementById('creditsOverlay');
+
+        function loadGames(gamesToRender) {
+            gamesGrid.innerHTML = "";
+            if (gamesToRender.length === 0) {
+                gamesGrid.innerHTML = "<p style='color: var(--text-secondary)'>No items matches search parameters.</p>";
+                return;
+            }
+            gamesToRender.forEach(game => {
+                const card = document.createElement('div');
+                card.className = 'game-card';
+                card.onclick = () => launchGame(game.title, game.url);
+                card.innerHTML = `
+                    <div class="game-thumb">${game.htmlContent}</div>
+                    <div class="game-info">
+                        <div class="game-title">${game.title}</div>
+                        <div class="game-category">${game.category}</div>
+                    </div>`;
+                gamesGrid.appendChild(card);
+            });
+        }
+
+        function launchGame(title, url) {
+            activeGameTitle.textContent = title;
+            gameIframe.src = url;
+            playerContainer.classList.add('active');
+            
+            gameIframe.onload = function() {
+                setTimeout(() => {
+                    gameIframe.contentWindow.focus();
+                }, 100);
+            };
+        }
+
+        function backToHome() {
+            playerContainer.classList.remove('active');
+            gameIframe.src = "";
+        }
+
+        function openCredits() {
+            creditsOverlay.classList.add('active');
+        }
+
+        function closeCredits() {
+            creditsOverlay.classList.remove('active');
+        }
+
+        function goFullscreen() {
+            const iframe = document.getElementById('gameIframe');
+            if (iframe.requestFullscreen) {
+                iframe.requestFullscreen();
+            } else if (iframe.webkitRequestFullscreen) {
+                iframe.webkitRequestFullscreen();
+            }
+        }
+
+        loadGames(games);
+
+        function filterGames() {
+            const query = document.getElementById('searchBar').value.toLowerCase();
+            const filtered = games.filter(game => 
+                game.title.toLowerCase().includes(query) || 
+                game.category.toLowerCase().includes(query)
+            );
+            loadGames(filtered);
+        }
+    </script>
+</body>
+</html>
